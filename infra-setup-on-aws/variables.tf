@@ -1,22 +1,28 @@
 variable "ec2-instance-names" {
   type = set(string)
-  default = [ "worker-01", "worker-02" ]
+  default = [ "redhat-client01", "redhat-client02" ]
 }
 
+variable "ingress_rules" {
+  default = [ 80, 22 ]
+  type = list(number)
+}
 
-output "prod-bastion-public-ip" {
-  value = aws_instance.prod-bastion.public_ip
+variable "egress_rules" {
+  default = [ 0 ]
+  type = list(number)  
+}
+
+output "redhatserver-public-ip" {
+  value = aws_instance.redhat-server.public_ip
 }
 
 output "master-01-privateip" {
-  value = aws_instance.master-node.private_ip
+  value = aws_instance.redhat-server.private_ip
 }
 
 output "worker-nodes-private-ip" {
 
-  value = [ for i in aws_instance.worker-nodes: i.private_ip ]
+  value = [ for i in aws_instance.redhat-client: i.private_ip ]
 }
 
-output "load_balancer-dns" {
-  value = aws_lb.prod-alb.dns_name
-}
