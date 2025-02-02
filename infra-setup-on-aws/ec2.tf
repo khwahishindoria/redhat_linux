@@ -35,7 +35,7 @@ resource "aws_instance" "redhat-server" {
     }
   
   tags = {
-    Name = "prod-bastion"
+    Name = "redhat-server"
   }
 
   connection {
@@ -50,10 +50,22 @@ resource "aws_instance" "redhat-server" {
     destination = "/home/ec2-user/key.pem" 
   }
 
+  provisioner "file" {
+    source = "/home/ubuntu/redhat_linux/infra-setup-on-aws/script-all-nodes.sh"
+    destination = "/home/ec2-user/script-all-nodes.sh" 
+  }
+
+  provisioner "file" {
+    source = "/home/ubuntu/redhat_linux/infra-setup-on-aws/script-server.sh"
+    destination = "/home/ec2-user/script-server.sh" 
+  }
+
   provisioner "remote-exec" {
     inline = [ 
       "sudo yum update -y",
       "sudo hostnamectl set-hostname redhat-server",
+      "sudo bash /home/ec2-user/script-all-nodes.sh",
+      "sudo bash /home/ec2-user/script-server.sh",      
      ]
 
     }
@@ -77,7 +89,7 @@ resource "aws_instance" "redhat-client" {
     volume_type = "gp3"
     }
   connection {
-    bastion_host = aws_instance.prod-bastion.public_ip
+    bastion_host = aws_instance.redhat-server.public_ip
     bastion_port = "22"
     bastion_private_key = file("~/.ssh/id_rsa")
     type = "ssh"
@@ -93,8 +105,12 @@ resource "aws_instance" "redhat-client" {
   }
 
   provisioner "file" {
-    source = "/home/ubuntu/Terraform/kubeadm-with-ec2/script-all-nodes.sh"
+    source = "/home/ubuntu/redhat_linux/infra-setup-on-aws/script-all-nodes.sh"
     destination = "/home/ec2-user/script-all-nodes.sh" 
+  }
+  provisioner "file" {
+    source = "/home/ubuntu/redhat_linux/infra-setup-on-aws/script-client.sh"
+    destination = "/home/ec2-user/script-client.sh"
   }
 
   provisioner "remote-exec" {
@@ -102,8 +118,8 @@ resource "aws_instance" "redhat-client" {
       "sudo apt update -y",
       "sudo hostnamectl set-hostname ${each.value}",
       "sudo chmod 600 /home/ec2-user/key.pem",
-      "sudo chmod +x /root/script-all-nodes.sh",
       "sudo bash /home/ec2-user/script-all-nodes.sh",
+      "sudo bash /home/ec2-user/script-client.sh",
      ]    
   }
 
