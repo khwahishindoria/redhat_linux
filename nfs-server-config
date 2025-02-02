@@ -1,0 +1,70 @@
+vi /etc/hosts
+
+10.0.0.101	nfsserver.local.net
+10.0.1.93	nfsclient01.local.net
+10.0.1.77	nfsclient02.local.net
+
+
+
+server
+hostnamectl set-hostname nfsserver.local.net
+
+dnf install nfs-utils -y
+systemctl enable --now  nfs-server.service
+rpcinfo -p
+mkdir -p /mnt/nfs_share/docs
+chown -R nobody: /mnt/nfs_share/docs/
+
+yum install firewalld -y
+firewall-cmd --zone public --add-service=nfs --permanent
+firewall-cmd --zone public --add-service=rpc-bind --permanent
+firewall-cmd --zone public --add-service=mountd --permanent
+firewall-cmd --reload
+
+
+vi /etc/exports
+/mnt/nfs_share/docs/    10.0.1.0/24(rw,sync,no_all_squash,root_squash)
+
+
+
+systemctl restart nfs-server
+systemctl restart nfs-utils
+
+nfsstat
+
+
+
+Client
+
+hostnamectl set-hostname nfsclient01.local.net
+
+dnf install nfs-utils nfs4-acl-tools -y 
+showmount -e 10.0.0.101
+
+mkdir -p /mnt/client_share
+mount -t nfs 192.168.1.0/24:/mnt/nfs_share/docs /mnt/client_share/
+
+
+
+############### automount service config at client side #################################################
+yum install autofs -y
+ mkdir -p /automount/private
+ mkdir -p /automount/public
+
+  vi /etc/auto.master
+/automount /etc/automount.misc  --timeout=60
+
+
+  vi /etc/automount.misc
+public  -ro,sync        10.0.0.101:/mnt/nfs_share/public
+private  -ro,sync        10.0.0.101:/mnt/nfs_share/private
+
+
+systemctl start autofs
+systemctl enable autofs
+systemctl status autofs
+systemctl start rpcbind
+systemctl enable rpcbind
+
+
+
