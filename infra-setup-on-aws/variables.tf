@@ -17,11 +17,11 @@ output "redhatserver-public-ip" {
   value = aws_instance.redhat-server.public_ip
 }
 
-output "master-01-privateip" {
+output "redhatserver-public-ip" {
   value = aws_instance.redhat-server.private_ip
 }
 
-output "worker-nodes-private-ip" {
+output "redhaclient-public-ip" {
 
   value = [ for i in aws_instance.redhat-client: i.private_ip ]
 }

@@ -64,6 +64,7 @@ resource "aws_instance" "redhat-server" {
     inline = [ 
       "sudo yum update -y",
       "sudo hostnamectl set-hostname redhat-server",
+      "sudo chmod 600 /home/ec2-user/key.pem",
       "sudo bash /home/ec2-user/script-all-nodes.sh",
       "sudo bash /home/ec2-user/script-server.sh",      
      ]
