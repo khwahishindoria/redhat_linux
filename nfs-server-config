@@ -43,3 +43,28 @@ showmount -e 10.0.0.101
 
 mkdir -p /mnt/client_share
 mount -t nfs 192.168.1.0/24:/mnt/nfs_share/docs /mnt/client_share/
+
+
+
+############### automount service config at client side #################################################
+yum install autofs -y
+ mkdir -p /automount/private
+ mkdir -p /automount/public
+
+  vi /etc/auto.master
+/automount /etc/automount.misc  --timeout=60
+
+
+  vi /etc/automount.misc
+public  -ro,sync        10.0.0.101:/mnt/nfs_share/public
+private  -ro,sync        10.0.0.101:/mnt/nfs_share/private
+
+
+systemctl start autofs
+systemctl enable autofs
+systemctl status autofs
+systemctl start rpcbind
+systemctl enable rpcbind
+
+
+
